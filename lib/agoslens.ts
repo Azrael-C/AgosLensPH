@@ -115,18 +115,7 @@ export const DEFAULT_LOCATION: LocationOption = {
   country: "Philippines",
 };
 
-export const SAVED_LOCATIONS: LocationOption[] = [
-  DEFAULT_LOCATION,
-  {
-    id: "palo",
-    name: "Palo",
-    latitude: 11.1575,
-    longitude: 124.9908,
-    admin1: "Eastern Visayas",
-    admin2: "Leyte",
-    country: "Philippines",
-  },
-];
+export const SAVED_LOCATIONS: LocationOption[] = [DEFAULT_LOCATION];
 
 export const NATIONAL_SAMPLE_LOCATIONS: LocationOption[] = [
   { id: "laoag", name: "Laoag", latitude: 18.196, longitude: 120.593, admin1: "Ilocos Norte" },
