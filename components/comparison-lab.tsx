@@ -15,7 +15,6 @@ import {
   Analysis,
   DEFAULT_LOCATION,
   LocationOption,
-  SAVED_LOCATIONS,
   buildAnalysis,
   formatMetric,
   getFloodForecast,
@@ -56,10 +55,7 @@ function trendLabel(analysis: Analysis) {
 
 export function ComparisonLab() {
   const [left, setLeft] = useState<LocationOption>(DEFAULT_LOCATION);
-  const [right, setRight] = useState<LocationOption>(
-    SAVED_LOCATIONS.find((saved) => saved.id !== DEFAULT_LOCATION.id) ??
-      DEFAULT_LOCATION,
-  );
+  const [right, setRight] = useState<LocationOption | null>(null);
   const [leftData, setLeftData] = useState<ComparedData | null>(null);
   const [rightData, setRightData] = useState<ComparedData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +65,9 @@ export function ComparisonLab() {
   useEffect(() => {
     let active = true;
 
-    void Promise.allSettled([loadLocation(left), loadLocation(right)]).then(
+    const rightRequest = right ? loadLocation(right) : Promise.resolve(null);
+
+    void Promise.allSettled([loadLocation(left), rightRequest]).then(
       ([leftResult, rightResult]) => {
         if (!active) return;
         setLeftData(leftResult.status === "fulfilled" ? leftResult.value : null);
@@ -77,7 +75,9 @@ export function ComparisonLab() {
           rightResult.status === "fulfilled" ? rightResult.value : null,
         );
 
-        if (leftResult.status === "rejected" || rightResult.status === "rejected") {
+        const rightFailed = right !== null && rightResult.status === "rejected";
+
+        if (leftResult.status === "rejected" || rightFailed) {
           setError(
             "Some comparison data could not be retrieved. Available values are shown.",
           );
@@ -96,30 +96,42 @@ export function ComparisonLab() {
       {
         label: "Flood potential",
         left: leftData?.analysis.riskLevel ?? "Data unavailable",
-        right: rightData?.analysis.riskLevel ?? "Data unavailable",
+        right: right
+          ? rightData?.analysis.riskLevel ?? "Data unavailable"
+          : "—",
       },
       {
         label: "Next 24-hour rainfall",
         left: formatMetric(leftData?.analysis.next24Rain ?? null, "mm"),
-        right: formatMetric(rightData?.analysis.next24Rain ?? null, "mm"),
+        right: right
+          ? formatMetric(rightData?.analysis.next24Rain ?? null, "mm")
+          : "—",
       },
       {
         label: "Current river discharge",
         left: formatMetric(leftData?.analysis.currentDischarge ?? null, "m³/s"),
-        right: formatMetric(rightData?.analysis.currentDischarge ?? null, "m³/s"),
+        right: right
+          ? formatMetric(rightData?.analysis.currentDischarge ?? null, "m³/s")
+          : "—",
       },
       {
         label: "River trend",
         left: leftData ? trendLabel(leftData.analysis) : "Data unavailable",
-        right: rightData ? trendLabel(rightData.analysis) : "Data unavailable",
+        right: right
+          ? rightData
+            ? trendLabel(rightData.analysis)
+            : "Data unavailable"
+          : "—",
       },
       {
         label: "Forecast uncertainty",
         left: leftData?.analysis.uncertaintyLabel ?? "Data unavailable",
-        right: rightData?.analysis.uncertaintyLabel ?? "Data unavailable",
+        right: right
+          ? rightData?.analysis.uncertaintyLabel ?? "Data unavailable"
+          : "—",
       },
     ],
-    [leftData, rightData],
+    [leftData, right, rightData],
   );
 
   function selectLeft(location: LocationOption) {
@@ -196,7 +208,9 @@ export function ComparisonLab() {
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="w-[32%] text-slate-400">Metric</TableHead>
                   <TableHead className="text-sky-200">{left.name}</TableHead>
-                  <TableHead className="text-teal-200">{right.name}</TableHead>
+                  <TableHead className="text-teal-200">
+                    {right?.name ?? "Select a location"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
