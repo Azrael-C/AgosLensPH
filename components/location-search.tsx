@@ -17,7 +17,7 @@ import {
 } from "@/lib/agoslens";
 
 type LocationSearchProps = {
-  value: LocationOption;
+  value: LocationOption | null;
   onSelect: (location: LocationOption) => void;
   compact?: boolean;
 };
@@ -34,7 +34,7 @@ export function LocationSearch({
 
   useEffect(() => {
     const normalized = query.trim();
-    if (normalized.length < 2 || normalized === value.name) {
+    if (normalized.length < 2 || normalized === value?.name) {
       return;
     }
 
@@ -60,23 +60,23 @@ export function LocationSearch({
       active = false;
       window.clearTimeout(timer);
     };
-  }, [query, value.name]);
+  }, [query, value?.name]);
 
   return (
     <div className="relative w-full">
       <Combobox
         items={results}
         value={value}
-        itemToStringLabel={(location: LocationOption) =>
+        itemToStringLabel={(location: LocationOption | null) =>
           location ? locationLabel(location) : ""
         }
-        isItemEqualToValue={(left: LocationOption, right: LocationOption) =>
+        isItemEqualToValue={(left: LocationOption, right: LocationOption | null) =>
           left?.id === right?.id
         }
         onInputValueChange={(inputValue) => {
           setQuery(inputValue);
           const normalized = inputValue.trim();
-          if (normalized.length < 2 || normalized === value.name) {
+          if (normalized.length < 2 || normalized === value?.name) {
             setResults([]);
             setLoading(false);
             setError(null);
